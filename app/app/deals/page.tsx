@@ -21,19 +21,41 @@ type DealRow = {
 export default function DealsPage() {
   const [rows, setRows] = useState<DealRow[]>([]);
   const [q, setQ] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
-      const { data, error } = await supabase
-        .from("deals")
-        .select("id,status,round_type,target_amount,min_ticket,valuation,instrument,startup:startup_id(name,sector,hq_location)")
-        .order("created_at", { ascending: false });
+      try {
+        // Add timeout to prevent infinite loading
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Loading timeout")), 10000)
+        );
 
-      if (error) {
-        console.error(error);
-        return;
+        const dataPromise = supabase
+          .from("deals")
+          .select("id,status,round_type,target_amount,min_ticket,valuation,instrument,startup:startup_id(name,sector,hq_location)")
+          .order("created_at", { ascending: false });
+
+        const { data, error } = await Promise.race([
+          dataPromise,
+          timeoutPromise
+        ]) as any;
+
+        if (error) {
+          console.error("Deals load error:", error);
+          setError("Failed to load deals. Please refresh the page.");
+          setLoading(false);
+          return;
+        }
+
+        setRows((data as any) ?? []);
+        setLoading(false);
+      } catch (e: any) {
+        console.error("Deals load error:", e);
+        setError("Failed to load deals. Please refresh the page.");
+        setLoading(false);
       }
-      setRows((data as any) ?? []);
     }
     load();
   }, []);
@@ -52,6 +74,36 @@ export default function DealsPage() {
       return hay.includes(s);
     });
   }, [rows, q]);
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <div className="text-2xl font-semibold">Deals</div>
+        <div className="text-sm text-black/60">Loading deals...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-4">
+        <div className="text-2xl font-semibold">Deals</div>
+        <Card>
+          <CardContent>
+            <div className="py-8 text-center">
+              <div className="text-sm text-red-600 mb-2">{error}</div>
+              <button
+                onClick={() => window.location.reload()}
+                className="text-sm text-blue-600 hover:underline"
+              >
+                Refresh page
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -105,7 +157,7 @@ export default function DealsPage() {
         ))}
       </div>
 
-      {filtered.length === 0 ? (
+      {filtered.length === 0 && !loading ? (
         <div className="text-sm text-black/60">No deals available for your role yet.</div>
       ) : null}
     </div>

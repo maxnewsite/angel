@@ -61,88 +61,98 @@ export default function OnboardingNew() {
 
   async function loadUserData() {
     try {
-      const { data: session } = await supabase.auth.getSession();
-      const uid = session.session?.user?.id;
-      const email = session.session?.user?.email;
+      // Add timeout to prevent infinite loading
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Loading timeout")), 10000)
+      );
 
-      if (!uid) {
-        router.push("/auth");
-        return;
-      }
+      const loadPromise = async () => {
+        const { data: session } = await supabase.auth.getSession();
+        const uid = session.session?.user?.id;
+        const email = session.session?.user?.email;
 
-      setUserId(uid);
-      setUserEmail(email || null);
-
-      // Check email verification from Supabase Auth
-      const emailConfirmed = session.session?.user?.email_confirmed_at;
-      setEmailVerified(!!emailConfirmed);
-
-      // Load existing profile data
-      const { data: profile, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", uid)
-        .single();
-
-      if (error && error.code === "PGRST116") {
-        // Profile doesn't exist, create it
-        await supabase.from("profiles").insert({
-          id: uid,
-          email: email,
-          created_at: new Date().toISOString()
-        });
-      } else if (profile) {
-        // Check if already onboarded
-        if (profile.onboarding_completed) {
-          router.push("/app/deals");
+        if (!uid) {
+          router.push("/auth");
           return;
         }
 
-        // Pre-fill form with existing data
-        setRole(profile.role || "");
-        setFormData(prev => ({
-          ...prev,
-          full_name: profile.full_name || "",
-          phone: profile.phone || "",
-          linkedin_url: profile.linkedin_url || "",
-          location: profile.location || "",
-          company: profile.company || "",
-          title: profile.title || "",
-          bio: profile.bio || "",
-          investor_type: profile.investor_type || "",
-          accredited_investor: profile.accredited_investor || false,
-          investment_experience_years: profile.investment_experience_years?.toString() || "",
-          portfolio_size: profile.portfolio_size || "",
-          typical_ticket_size: profile.typical_ticket_size?.toString() || "",
-          preferred_sectors: profile.preferred_sectors || [],
-          preferred_stages: profile.preferred_stages || [],
-          preferred_geographies: profile.preferred_geographies || [],
-          founder_experience: profile.founder_experience || "",
-          previous_exits: profile.previous_exits?.toString() || "",
-          specializations: profile.specializations || [],
-          education: profile.education || [],
-        }));
+        setUserId(uid);
+        setUserEmail(email || null);
 
-        // Determine which step to show
-        if (!emailConfirmed) {
-          setCurrentStep("email_verification");
-        } else if (!profile.role) {
-          setCurrentStep("role_selection");
-        } else if (!profile.full_name) {
-          setCurrentStep("basic_info");
-        } else if (profile.role === "investor" && !profile.investor_type) {
-          setCurrentStep("investor_profile");
-        } else if (profile.role === "founder" && !profile.founder_experience) {
-          setCurrentStep("founder_profile");
-        } else {
-          setCurrentStep("preferences");
+        // Check email verification from Supabase Auth
+        const emailConfirmed = session.session?.user?.email_confirmed_at;
+        setEmailVerified(!!emailConfirmed);
+
+        // Load existing profile data
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", uid)
+          .single();
+
+        if (error && error.code === "PGRST116") {
+          // Profile doesn't exist, create it
+          await supabase.from("profiles").insert({
+            id: uid,
+            email: email,
+            created_at: new Date().toISOString()
+          });
+        } else if (profile) {
+          // Check if already onboarded
+          if (profile.onboarding_completed) {
+            router.push("/app/deals");
+            return;
+          }
+
+          // Pre-fill form with existing data
+          setRole(profile.role || "");
+          setFormData(prev => ({
+            ...prev,
+            full_name: profile.full_name || "",
+            phone: profile.phone || "",
+            linkedin_url: profile.linkedin_url || "",
+            location: profile.location || "",
+            company: profile.company || "",
+            title: profile.title || "",
+            bio: profile.bio || "",
+            investor_type: profile.investor_type || "",
+            accredited_investor: profile.accredited_investor || false,
+            investment_experience_years: profile.investment_experience_years?.toString() || "",
+            portfolio_size: profile.portfolio_size || "",
+            typical_ticket_size: profile.typical_ticket_size?.toString() || "",
+            preferred_sectors: profile.preferred_sectors || [],
+            preferred_stages: profile.preferred_stages || [],
+            preferred_geographies: profile.preferred_geographies || [],
+            founder_experience: profile.founder_experience || "",
+            previous_exits: profile.previous_exits?.toString() || "",
+            specializations: profile.specializations || [],
+            education: profile.education || [],
+          }));
+
+          // Determine which step to show
+          if (!emailConfirmed) {
+            setCurrentStep("email_verification");
+          } else if (!profile.role) {
+            setCurrentStep("role_selection");
+          } else if (!profile.full_name) {
+            setCurrentStep("basic_info");
+          } else if (profile.role === "investor" && !profile.investor_type) {
+            setCurrentStep("investor_profile");
+          } else if (profile.role === "founder" && !profile.founder_experience) {
+            setCurrentStep("founder_profile");
+          } else {
+            setCurrentStep("preferences");
+          }
         }
-      }
+      };
 
+      await Promise.race([loadPromise(), timeoutPromise]);
       setLoading(false);
     } catch (e) {
       console.error("Load user data error:", e);
+      // On error, stop loading and show role selection step
       setLoading(false);
+      setCurrentStep("role_selection");
     }
   }
 

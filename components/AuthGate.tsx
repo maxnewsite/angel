@@ -14,7 +14,17 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
 
     async function check() {
       try {
-        const { data, error } = await supabase.auth.getSession();
+        // Add timeout to prevent infinite loading
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Auth check timeout")), 10000)
+        );
+
+        const sessionPromise = supabase.auth.getSession();
+
+        const { data, error } = await Promise.race([
+          sessionPromise,
+          timeoutPromise
+        ]) as any;
 
         if (!mounted) return;
 
@@ -37,8 +47,13 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
       } catch (e) {
         console.error("Auth gate error:", e);
         if (mounted) {
+          // Failsafe: If auth check fails, assume not authenticated
           setAuthed(false);
           setLoading(false);
+          if (!redirecting) {
+            redirecting = true;
+            router.push("/auth");
+          }
         }
       }
     }
