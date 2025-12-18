@@ -191,9 +191,9 @@ export default function AnalyticsPage() {
           <p className="text-gray-600 mt-1">Comprehensive pipeline metrics and performance insights</p>
         </div>
         <Badge variant="outline" className="text-sm">
-          <BarChart3 className="w-4 h-4 mr-2" />
-          Real-time Data
-        </Badge>
+  	  <BarChart3 className="w-4 h-4 mr-2" />
+  	  Real-time Data
+	</Badge>
       </div>
 
       {/* Key Performance Indicators */}

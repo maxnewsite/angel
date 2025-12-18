@@ -328,16 +328,26 @@ export default function OnboardingNew() {
   }
 
   const updateFormData = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
-  const toggleArrayItem = (field: string, item: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: prev[field as keyof typeof prev].includes(item)
-        ? (prev[field as keyof typeof prev] as string[]).filter(i => i !== item)
-        : [...(prev[field as keyof typeof prev] as string[]), item]
-    }));
+  const toggleArrayItem = (field: keyof typeof formData, item: string) => {
+    setFormData((prev) => {
+      const current = prev[field];
+      const currentArray = Array.isArray(current) ? current : [];
+
+      const nextArray = currentArray.includes(item)
+        ? currentArray.filter((i) => i !== item)
+        : [...currentArray, item];
+
+      return {
+        ...prev,
+        [field]: nextArray,
+      };
+    });
   };
 
   if (loading) {
