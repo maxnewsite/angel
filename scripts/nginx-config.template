@@ -1,0 +1,70 @@
+# Nginx Configuration Template for AngelOS
+# Save this to: /etc/nginx/sites-available/angelos
+# Then link it: sudo ln -s /etc/nginx/sites-available/angelos /etc/nginx/sites-enabled/
+
+server {
+    listen 80;
+    listen [::]:80;
+
+    # REPLACE WITH YOUR DOMAIN
+    server_name yourdomain.com www.yourdomain.com;
+
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "no-referrer-when-downgrade" always;
+
+    # Proxy to Next.js application
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+
+        # WebSocket support
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+
+        # Standard proxy headers
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Timeouts
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+
+        # Don't cache
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    # Static files optimization (Next.js static assets)
+    location /_next/static {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_cache_bypass $http_upgrade;
+
+        # Cache static assets for 1 year
+        expires 365d;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # Favicon and robots.txt
+    location ~ ^/(favicon\.ico|robots\.txt) {
+        proxy_pass http://localhost:3000;
+        expires 7d;
+    }
+
+    # Client max body size (for file uploads)
+    client_max_body_size 10M;
+
+    # Gzip compression
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml+rss application/json application/javascript;
+}
+
+# HTTPS configuration will be automatically added by Certbot
+# After running: sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com

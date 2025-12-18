@@ -1,0 +1,37 @@
+# GitHub Actions - Automatic Deployment to Hostinger VPS
+# This deploys your code automatically when you push to the master branch
+
+name: Deploy to Hostinger VPS
+
+on:
+  push:
+    branches:
+      - master  # Triggers on push to master branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ~/angel2
+            git pull origin master
+            npm install
+            npm run build
+            pm2 restart angelos
+            echo "Deployment completed successfully!"
+
+# Setup Instructions:
+# 1. Go to GitHub repository → Settings → Secrets and variables → Actions
+# 2. Add these secrets:
+#    - VPS_HOST: your_vps_ip_address
+#    - VPS_USERNAME: angel
+#    - SSH_PRIVATE_KEY: Your SSH private key content
+# 3. Push this file to GitHub
+# 4. Every push to master will now auto-deploy!
