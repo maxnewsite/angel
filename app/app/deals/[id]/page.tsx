@@ -171,13 +171,24 @@ export default function DealDetail() {
         <Card>
           <CardHeader>
             <div className="flex items-start justify-between gap-3">
-              <div>
+              <div className="flex-1">
                 <div className="text-lg font-semibold">{deal.startup?.name ?? "Startup"}</div>
                 <div className="mt-1 text-xs text-black/60">
                   {(deal.startup?.sector ?? "—")} • {(deal.startup?.hq_location ?? "—")}
                 </div>
               </div>
-              <Badge>{deal.status}</Badge>
+              <div className="flex items-center gap-2">
+                <Badge>{deal.status}</Badge>
+                {(role === "dealflow_manager" || role === "admin") && (
+                  <Button
+                    variant="secondary"
+                    onClick={() => window.location.href = `/app/deals/${id}/edit`}
+                    className="text-xs"
+                  >
+                    Edit
+                  </Button>
+                )}
+              </div>
             </div>
           </CardHeader>
           <CardContent>

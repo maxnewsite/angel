@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
@@ -7,6 +8,7 @@ import { Textarea } from "@/components/ui/Textarea";
 import { Button } from "@/components/ui/Button";
 
 export default function NewDealForm() {
+  const router = useRouter();
   const [userRole, setUserRole] = useState<string | null>(null);
   const [startup, setStartup] = useState<any | null>(null);
   const [startupForm, setStartupForm] = useState({
@@ -91,8 +93,6 @@ export default function NewDealForm() {
     }
 
     // Create new startup
-    // For founders: owner_user_id = uid
-    // For internal roles (admin/dealflow_manager/dealflow_analyst): owner_user_id = null
     const isFounder = userRole === "founder";
 
     const { data, error } = await supabase
@@ -109,7 +109,9 @@ export default function NewDealForm() {
       .select("*")
       .single();
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      throw new Error(error.message);
+    }
 
     // Only cache startup for founders
     if (isFounder) {
@@ -122,12 +124,15 @@ export default function NewDealForm() {
   async function createDeal() {
     try {
       setUploading(true);
+
       const st = await ensureStartup();
       const { data: sess } = await supabase.auth.getSession();
       const uid = sess.session?.user?.id;
-      if (!uid) return;
+      if (!uid) {
+        throw new Error("Not authenticated");
+      }
 
-      // Create the deal - all deals start with status "submitted"
+      // Create the deal
       const { data: deal, error: dealError } = await supabase
         .from("deals")
         .insert({
@@ -147,11 +152,14 @@ export default function NewDealForm() {
         .select("id")
         .single();
 
-      if (dealError) throw new Error(dealError.message);
+      if (dealError) {
+        throw new Error("Failed to create deal: " + dealError.message);
+      }
 
       // Upload pitch deck if provided
       if (pitchDeck) {
         const fileName = `${deal.id}/${Date.now()}_${pitchDeck.name}`;
+
         const { error: uploadError } = await supabase.storage
           .from("deal-docs")
           .upload(fileName, pitchDeck, {
@@ -160,7 +168,6 @@ export default function NewDealForm() {
           });
 
         if (uploadError) {
-          console.error("Upload error:", uploadError);
           throw new Error("Failed to upload pitch deck: " + uploadError.message);
         }
 
@@ -177,14 +184,14 @@ export default function NewDealForm() {
         });
 
         if (docError) {
-          console.error("Document record error:", docError);
           throw new Error("Failed to create document record: " + docError.message);
         }
       }
 
       alert("Deal submitted successfully!");
-      window.location.href = `/app/deals/${deal.id}`;
+      router.push(`/app/deals/${deal.id}`);
     } catch (e: any) {
+      console.error("Deal creation error:", e);
       alert(e.message || String(e));
     } finally {
       setUploading(false);
