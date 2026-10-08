@@ -157,7 +157,7 @@ Format your response ONLY as valid JSON (no markdown code blocks) with this stru
 
       // Use Anthropic Claude with PDF support
       const requestBody = {
-        model: "claude-haiku-4-5-20251001",
+        model: "claude-haiku-5-5",
         max_tokens: 4096,
         messages: [{
           role: "user",

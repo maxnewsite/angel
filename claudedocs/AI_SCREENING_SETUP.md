@@ -174,18 +174,18 @@ ON CONFLICT DO NOTHING;
 
 ## Model Configuration
 
-**Current Model**: `claude-haiku-4-5-20251001` (Claude Haiku 4.5)
+**Current Model**: `claude-haiku-5-5` (Claude Haiku 5.5)
 **Why this model**:
 - Native PDF support (reads images, charts, formatting)
 - Fast and cost-effective
 - Reliable JSON output
-- Latest Haiku model with excellent performance
+- Latest Haiku model (1M context, adaptive thinking)
 
 ## API Costs
 
-Using Claude Haiku 4.5:
-- **Input**: ~$1 per million tokens
-- **Output**: ~$5 per million tokens
+Using Claude Haiku 5.5:
+- **Input**: ~$0.10 per million tokens (prompts up to 100K; $0.50 above)
+- **Output**: ~$0.50 per million tokens (prompts up to 100K; $2.50 above)
 
 Estimated cost per pitch deck:
 - 10-page PDF: ~50K input tokens + 2K output tokens = **~$0.06**
