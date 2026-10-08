@@ -160,7 +160,7 @@ Example:
 
 ## Model Information
 
-- **Model**: Claude Haiku 4.5 (`claude-haiku-4-5-20251001`)
+- **Model**: Claude Haiku 5.5 (`claude-haiku-5-5`)
 - **Max Tokens**: 4,096 output tokens
 - **API**: Anthropic Messages API with PDF support
 - **Version**: anthropic-version: 2023-06-01
@@ -229,5 +229,5 @@ SELECT COUNT(*) FROM screening_criteria WHERE is_active = true;
 **Check**: Logs will show "No AI analysis found for criterion: X"
 
 ### Model error
-**Fix**: Verify model name is `claude-haiku-4-5-20251001`
-**This is**: Latest Claude Haiku 4.5 model (October 2025 release)
+**Fix**: Verify model name is `claude-haiku-5-5`
+**This is**: Claude Haiku 5.5 model (released October 7, 2026)

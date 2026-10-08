@@ -128,7 +128,7 @@ Format your response ONLY as valid JSON (no markdown) with this structure:
 
     console.log("Detecting flags with AI...");
     const requestBody: any = {
-      model: "claude-haiku-4-5-20251001",
+      model: "claude-haiku-5-5",
       max_tokens: 2048,
       messages: [{
         role: "user",

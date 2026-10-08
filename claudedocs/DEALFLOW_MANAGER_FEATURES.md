@@ -43,7 +43,7 @@ New features enabling dealflow managers to create deals and analyze them with YC
 
 ### 3. AI Flag Detection
 **Edge Function**: `ai-detect-flags`
-**Model**: Claude Haiku 4.5
+**Model**: Claude Haiku 5.5
 
 **How it works**:
 1. Analyzes deal information + pitch deck (if available)
@@ -200,7 +200,7 @@ npx supabase functions deploy ai-detect-flags
 ```
 
 ### AI Model Details
-- **Model**: Claude Haiku 4.5 (`claude-haiku-4-5-20251001`)
+- **Model**: Claude Haiku 5.5 (`claude-haiku-5-5`)
 - **Input**: Deal data + optional pitch deck PDF
 - **Output**: 3-5 green flags + 3-5 red flags
 - **Cost**: ~$0.03-0.05 per analysis
